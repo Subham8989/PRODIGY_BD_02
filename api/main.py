@@ -32,15 +32,23 @@ class UserList(Resource):
 
 class UserDetail(Resource):
   def get(self, user_id):
-    pass
+    user = User.objects(_id=user_id).first()
+    if not user:
+      return { "message": "User not found" }, 404
+    return user.to_mongo().to_dict(), 200
 
   def put(self, user_id):
-    pass
-
+    args = parser.parse_args()
+    user = User.objects(_id=user_id).update(name=args["name"], email=args["email"], age=args["age"])
+    if user == 0:
+      return { "message": "User not found" }, 404
+    return { "message": "User updated", "_id": user_id }, 200
+  
   def patch(self, user_id):
     pass
 
   def delete(self, user_id):
-    pass
-
-  
+    user = User.objects(_id=user_id).delete()
+    if user == 0:
+      return { "message": "User not found" }, 404
+    return { "message": "User deleted", "_id": user_id }, 202
