@@ -13,6 +13,11 @@ parser.add_argument("name", type=str, required=True, help="Name cannot be empty!
 parser.add_argument("email", type=email_type, required=True, help="Valid email address required!")
 parser.add_argument("age", type=int, help="Age must be a number!")
 
+patch_parser = reqparse.RequestParser()
+patch_parser.add_argument("name", type=str, help="Valid name required!")
+patch_parser.add_argument("email", type=email_type, help="Valid email address required!")
+patch_parser.add_argument("age", type=int, help="Valid age required!")
+
 class UserList(Resource):
   def get(self):
     users = User.objects()
@@ -45,7 +50,22 @@ class UserDetail(Resource):
     return { "message": "User updated", "_id": user_id }, 200
   
   def patch(self, user_id):
-    pass
+    args = patch_parser.parse_args()
+    cpy = args.copy()
+    for key, value in args.items():
+      if not value:
+        cpy.pop(key)
+    args = cpy.copy()
+    del cpy
+    user = User.objects(_id=user_id).first()
+    print(user)
+    if len(args.keys()) == 0 and user:
+      return { "message": "No proper update parameters!" }, 400
+    if not user:
+      return { "message": "User not found" }, 404
+    User.objects(_id=user_id).update(**args)
+    return { "message": "User updated", "_id": user_id }, 200
+
 
   def delete(self, user_id):
     user = User.objects(_id=user_id).delete()
